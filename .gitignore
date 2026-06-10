@@ -1,0 +1,15 @@
+node_modules/
+dist/
+.pr-preview/
+*.log
+.DS_Store
+**/.vite/
+*.tsbuildinfo
+examples/*/node_modules/
+examples/*/dist/
+
+# npm pack output
+*.tgz
+
+# never commit npm auth tokens
+.npmrc

@@ -1,0 +1,82 @@
+{
+  "name": "@qwertybit/pr-preview",
+  "version": "0.1.2",
+  "description": "Record a UI journey once, get polished before/after MP4 clips of every pull request — automatically.",
+  "license": "MIT",
+  "author": "QwertyBit <vlad@flowpoint.ai>",
+  "homepage": "https://pr-preview.com",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/QwertyBit-Ventures/pr-preview.git"
+  },
+  "bugs": {
+    "url": "https://github.com/QwertyBit-Ventures/pr-preview/issues"
+  },
+  "type": "module",
+  "bin": {
+    "pr-preview": "dist/cli/index.js"
+  },
+  "main": "./dist/cli/index.js",
+  "files": [
+    "dist",
+    "assets",
+    "README.md",
+    "LICENSE",
+    "CHANGELOG.md"
+  ],
+  "engines": {
+    "node": ">=20"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "scripts": {
+    "build": "npm run build:harness && npm run build:lib",
+    "build:lib": "tsup",
+    "build:harness": "vite build harness",
+    "dev:harness": "vite harness",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run test/unit",
+    "test:e2e": "vitest run test/e2e",
+    "test:all": "vitest run",
+    "test:watch": "vitest test/unit",
+    "prepublishOnly": "npm run build"
+  },
+  "keywords": [
+    "pull-request",
+    "pr",
+    "code-review",
+    "demo",
+    "mp4",
+    "gif",
+    "screen-recording",
+    "visual-diff",
+    "before-after",
+    "playwright",
+    "git",
+    "frontend"
+  ],
+  "dependencies": {
+    "commander": "^12.1.0",
+    "get-port": "^7.1.0",
+    "gifenc": "^1.0.3",
+    "jiti": "^2.4.2",
+    "ora": "^8.2.0",
+    "picocolors": "^1.1.1",
+    "playwright": "^1.52.0",
+    "sharp": "^0.33.5",
+    "tree-kill": "^1.2.2",
+    "ws": "^8.18.0",
+    "zod": "^3.24.0"
+  },
+  "devDependencies": {
+    "@preact/preset-vite": "^2.10.0",
+    "@types/node": "^22.10.0",
+    "@types/ws": "^8.5.13",
+    "preact": "^10.25.0",
+    "tsup": "^8.3.5",
+    "typescript": "^5.7.0",
+    "vite": "^6.0.0",
+    "vitest": "^2.1.8"
+  }
+}
