@@ -6,6 +6,15 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [0.1.6] — 2026-07-07
+
+### Changed
+
+- **Demo shown inline** — the README now embeds the demo directly at the top
+  (an inline `<video>` player on GitHub; the autoplaying GIF on npm, which can't
+  render video) instead of a separate "Watch in higher quality" link. Demo URLs
+  are version-pinned so the CDN/GitHub image proxy never serve a stale clip.
+
 ## [0.1.5] — 2026-07-07
 
 ### Changed
@@ -108,7 +117,8 @@ Initial release.
   CSP `frame-ancestors`) are stripped.
 - CLI: `pr-preview init`, `pr-preview record`, `pr-preview run`.
 
-[Unreleased]: https://github.com/QwertyBit-Ventures/pr-preview/compare/v0.1.5...HEAD
+[Unreleased]: https://github.com/QwertyBit-Ventures/pr-preview/compare/v0.1.6...HEAD
+[0.1.6]: https://github.com/QwertyBit-Ventures/pr-preview/compare/v0.1.5...v0.1.6
 [0.1.5]: https://github.com/QwertyBit-Ventures/pr-preview/compare/v0.1.4...v0.1.5
 [0.1.4]: https://github.com/QwertyBit-Ventures/pr-preview/compare/v0.1.0...v0.1.4
 [0.1.0]: https://github.com/QwertyBit-Ventures/pr-preview/releases/tag/v0.1.0
