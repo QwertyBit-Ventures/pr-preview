@@ -38,33 +38,35 @@ about a minute.
 
 ---
 
-## ✨ Features
+## Features
 
-- 🎬 **Record by demonstration** — just use your app. Clicks, typing, scrolling and navigation are
+- **Record by demonstration** — just use your app. Clicks, typing, scrolling and navigation are
   captured as an editable outline; no selectors or scripts to hand-write.
-- 🎥 **Live capture, zero drift** — the clip is your real recording, not a replay, so it never
+- **Live capture, zero drift** — the clip is your real recording, not a replay, so it never
   desyncs on stateful apps. A synthetic cursor makes every move easy to follow.
-- 🌳 **True before/after** — the base branch runs in an isolated git **worktree**; your working
+- **True before/after** — the base branch runs in an isolated git **worktree**; your working
   tree is never touched. Or point it at an app you already run with `--url`.
-- 🎞️ **Tiny, sharp MP4s** — H.264, near-Full-HD, a few hundred KB. GitHub renders them inline in a
+- **Tiny, sharp MP4s** — H.264, near-Full-HD, a few hundred KB. GitHub renders them inline in a
   PR. High-quality GIF fallback when ffmpeg isn't installed.
-- 🔒 **Runs entirely on your machine** — nothing is uploaded. Your source and app data never leave
+- **Runs entirely on your machine** — nothing is uploaded. Your source and app data never leave
   your computer.
-- 🏷️ **Self-describing clips** — each is captioned with its branch and a timestamp.
-- 🤖 **Agent-friendly** — config-driven and flag-free, so you can kick it off from Claude Code or CI.
+- **Self-describing clips** — each is captioned with its branch and a timestamp.
+- **Drive it from Claude Code** — a built-in MCP server lets Claude record a journey for you from
+  a plain-English prompt: it opens Chrome, performs the flow step by step, and can even open the PR.
+  Agent-driven, but still a real capture of your real app — never synthesized. Manual mode still works.
 
-## 🚀 Install
+## Install
 
 ```bash
 npm i -D @qwertybit/pr-preview
 npx playwright install chromium   # one-time browser download
-npx pr-preview init               # scaffolds pr-preview.config.js
+npx pr-preview init               # scaffolds pr-preview.config.js + .mcp.json (Claude Code)
 ```
 
 > **ffmpeg** (optional, recommended) gives you MP4 output. macOS: `brew install ffmpeg` ·
 > Debian/Ubuntu: `apt install ffmpeg`. Without it, PR Preview produces a high-quality GIF instead.
 
-## ⚡ Quick start
+## Quick start
 
 On your PR branch:
 
@@ -85,7 +87,7 @@ Both clips land in `.pr-preview/output/`. Drag them into your PR description —
 Just need one clip (a demo, a bug repro)? `npx pr-preview run --single` records a single standalone
 video, no comparison.
 
-## 🧠 How it works
+## How it works
 
 A run is a short wizard shown in the harness sidebar:
 
@@ -103,7 +105,7 @@ Record    Capture   Record    Capture   Generate
   keep a session you set up by hand (e.g. a manual login) — only shown when there's state to reset.
 - **Refresh button** in the frame corner reloads the app whenever you need a clean slate.
 
-## 📦 Output
+## Output
 
 | `format` | Result | Needs ffmpeg |
 | --- | --- | --- |
@@ -113,7 +115,7 @@ Record    Capture   Record    Capture   Generate
 
 MP4 is recommended: full color, far smaller than GIF, and GitHub embeds it inline.
 
-## ⚙️ Configuration
+## Configuration
 
 Everything lives in `pr-preview.config.js` (or `.ts` / `.json`), so a project is set up once and
 runs with **no flags**:
@@ -161,13 +163,14 @@ export default {
 | `permissions` | allow-all | Browser permissions to grant (Playwright names). Unlisted ones stay denied — no native prompt blocks the run. |
 | `geolocation` | — | Fixed `{ latitude, longitude }` so location apps render identical results in both clips. |
 
-## 🖥️ CLI
+## CLI
 
 | Command | What it does |
 | --- | --- |
-| `pr-preview init` | Scaffold `pr-preview.config.js` and a `.gitignore` entry. |
+| `pr-preview init` | Scaffold `pr-preview.config.js`, a `.gitignore` entry, `.mcp.json`, and the `/record` Claude Code skill. |
 | `pr-preview record` | Record a journey on the current branch only (`-o <file>`). |
 | `pr-preview run` | The full before/after flow. |
+| `pr-preview mcp` | Run the MCP server (stdio) so Claude Code can drive a recording. |
 
 `run` flags: `-b, --base <ref>` (override base) · `--keep-worktree` (reuse the base worktree) ·
 `-u, --url <url>` (use your own running app) · `-s, --single` (one standalone clip, no comparison).
@@ -185,14 +188,68 @@ npx pr-preview run --url http://localhost:3000
 It records BEFORE on your running app, then **pauses** — you switch branches, restart on the same
 URL, and click **Continue** — then it records AFTER. No worktree, no managed dev server.
 
-## 🤖 Use it from Claude Code
+## Use it from Claude Code
 
-Because every setting lives in the config, a run takes no flags — so an AI agent can kick it off.
-Ask Claude Code for a preview and it runs `npx pr-preview run`; a Chrome window opens, **you click
-through the ~30-second journey**, and the agent picks up the finished `before.mp4` / `after.mp4` to
-drop into your PR. The agent triggers and finalizes; you demonstrate the journey.
+PR Preview ships an **MCP server** so Claude Code can record a journey for you — you describe the
+flow in plain English and Claude drives your real app in Chrome, records it, and (optionally) opens
+the PR. It's agent-driven, but still a real capture of your real app; nothing is synthesized.
 
-## 🔐 Privacy
+**Setup** — `npx pr-preview init` writes a `.mcp.json` that registers the server:
+
+```json
+{ "mcpServers": { "pr-preview": { "command": "npx", "args": ["pr-preview", "mcp"] } } }
+```
+
+Open the project in Claude Code (it auto-discovers `.mcp.json`) and just ask:
+
+> **You:** Record my add-to-cart flow — add 3 books to the cart, then go to checkout. Then open the PR.
+>
+> **Claude:** *opens Chrome, performs each step live, renders `before.mp4` + `after.mp4`, and opens
+> the pull request with the clip embedded.*
+
+**The tools Claude uses:**
+
+| Tool | What it does |
+| --- | --- |
+| `start_recording` | Open the app + start recording. `mode: "single"` (one clip) or `"before-after"`. Omit `url` to start your dev server; pass one to record an app you already run. |
+| `snapshot` | Read the page as an accessibility tree with `[ref=eN]` handles. |
+| `act` | Perform one action: `click` / `fill` / `press` / `hover` / `navigate` / `scroll` / `wait`. |
+| `next_pass` | *(before-after)* finish the BEFORE clip, switch to your branch, start AFTER. |
+| `finish_recording` | Stop, encode, and return the clip path(s). |
+| `open_pr` | Commit the clip, push the branch, and open a PR with the preview embedded. |
+| `detect_localhost` | Probe common dev-server ports and report which local apps are running (with their page titles). |
+| `cancel_recording` | Abort and close the browser without producing a clip. |
+
+Claude targets elements by their accessible name (no selectors or scripts), so it works on any app.
+
+**No URL? Claude asks — it never guesses.** If you don't name a URL, Claude runs `detect_localhost`
+first: if apps are running it asks which one to record; if none are, it asks for a local, staging, or
+production URL. That way it always records the app you meant.
+
+**The `/record` slash command.** `init` also installs a Claude Code skill at
+`.claude/skills/record/SKILL.md`, so you can record any flow in one line:
+
+```
+/record localhost:3000 add a book to the cart, then checkout
+```
+
+The skill drives the recording through the MCP tools above (agent mode), resolving the URL the same
+way. It's non-destructive — `init` skips it if the file already exists.
+
+**Before/after in agent mode** needs a managed dev server (omit `url`) and for you to be on a PR
+branch: Claude records the journey on the base branch (in a git worktree), then redoes the *same*
+journey on your branch. `--url` / already-running apps stay single-clip in agent mode, since an
+external app can't be branch-swapped without you.
+
+**About `open_pr`:** GitHub only plays inline video from its own attachment CDN (no public API), so
+the open-source path embeds an animated **GIF** (rendered inline) and links the full MP4. It creates
+a commit on your branch and pushes it, and needs the [GitHub CLI](https://cli.github.com) (`gh`)
+authenticated. One-click *hosted video in the PR body* is part of PR Preview for Teams.
+
+**Prefer to record by hand?** Manual mode is unchanged: `npx pr-preview run` opens Chrome for you to
+click through yourself. Both modes produce the same clips — the only difference is whose hands drive.
+
+## Privacy
 
 PR Preview runs locally — it opens your app in a Chrome window, records, and writes video files to
 your project. Nothing is uploaded. The clip is a real screen recording, so avoid typing real
@@ -216,25 +273,25 @@ PR Preview drives a real app inside a controlled browser, so a few things are ou
 
 ## Contributing
 
-See [CONTRIBUTING.md](./CONTRIBUTING.md). Issues and PRs welcome — and a ⭐ helps a lot.
+See [CONTRIBUTING.md](./CONTRIBUTING.md). Issues and PRs welcome — and a star helps a lot.
 
 ## License & what's free
 
 The **CLI is open source under the [MIT license](./LICENSE)** — free to use, including commercially.
 This is an open-core project:
 
-- ✅ **This CLI** — recording and before/after clip generation. MIT, free forever. Clips carry a
+- **This CLI** — recording and before/after clip generation. MIT, free forever. Clips carry a
   small `pr-preview.com` watermark.
-- 🔒 **PR Preview for Teams** ([pr-preview.com](https://pr-preview.com)) — the hosted service:
+- **PR Preview for Teams** ([pr-preview.com](https://pr-preview.com)) — the hosted service:
   clip hosting, a synced review player, team reviewers & comments, sharing, and watermark-free
   clips. A separate, proprietary commercial offering — *coming soon*.
-- ™️ The **"PR Preview" name and logo** are trademarks of SC QWERTYBIT SRL; the MIT license covers
+- The **"PR Preview" name and logo** are trademarks of SC QWERTYBIT SRL; the MIT license covers
   the code, not the brand.
 
 ---
 
 <p align="center">
-  <a href="https://pr-preview.com"><strong>🎬 pr-preview.com</strong></a><br/>
+  <a href="https://pr-preview.com"><strong>pr-preview.com</strong></a><br/>
   <sub>See it in action, and <a href="https://pr-preview.com/#teams">join the early-access list for PR&nbsp;Preview for Teams</a> —<br/>
   hosted clips, team reviews &amp; sharing, coming soon.</sub>
 </p>

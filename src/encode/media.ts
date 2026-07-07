@@ -3,7 +3,7 @@ import type { CapturedFrame } from "../capture/screencast.js";
 import { resampleToFps } from "../capture/frames.js";
 import { cssRectToFramePixels } from "../capture/region.js";
 import { buildOverlays, encodeGif, type EncodeOptions } from "./gif.js";
-import { encodeMp4, ffmpegAvailable } from "./ffmpeg.js";
+import { encodeMp4, encodeMp4Interpolated, ffmpegAvailable } from "./ffmpeg.js";
 
 export type MediaFormat = "mp4" | "gif" | "both";
 
@@ -34,7 +34,12 @@ export async function encodeMedia(
   let frameCount = 0;
 
   if (doMp4) {
-    const frames = resampleToFps(rawFrames, opts.fps);
+    const interpolate = opts.interpolate ?? "off";
+    const smooth = interpolate !== "off";
+    // With interpolation we feed the RAW, distinct captured frames (real timing)
+    // so ffmpeg can synthesise smooth in-between motion. Without it, keep the
+    // old constant-fps sample-and-hold.
+    const frames = smooth ? rawFrames : resampleToFps(rawFrames, opts.fps);
     frameCount = frames.length;
 
     const meta = await sharp(frames[0]!.data).metadata();
@@ -64,7 +69,22 @@ export async function encodeMedia(
     }
     const file = `${opts.outBase}.mp4`;
     opts.onProgress?.("Encoding MP4", frames.length, frames.length);
-    await encodeMp4(pngs, opts.fps, file);
+    if (smooth) {
+      // Per-frame duration = real gap to the next captured frame (seconds),
+      // CAPPED so a long idle gap (e.g. the agent's thinking time between
+      // actions, when nothing repaints) isn't turned into a slow morph by the
+      // interpolator — it's held briefly instead, which also trims dead air.
+      const MAX_HOLD = 0.5;
+      const durations = frames.map((f, i) =>
+        i < frames.length - 1
+          ? Math.min(MAX_HOLD, Math.max(0.001, (frames[i + 1]!.t - f.t) / 1000))
+          : 1 / opts.fps,
+      );
+      const outFps = Math.max(opts.smoothFps ?? 30, opts.fps);
+      await encodeMp4Interpolated(pngs, durations, outFps, interpolate as "blend" | "mci", file);
+    } else {
+      await encodeMp4(pngs, opts.fps, file);
+    }
     paths.push(file);
   }
 

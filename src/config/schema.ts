@@ -43,6 +43,21 @@ export const configSchema = z.object({
       fps: z.number().positive().max(60).default(24),
       quality: z.enum(["high", "max"]).default("high"),
       maxColors: z.number().int().min(2).max(256).default(256),
+      /**
+       * Motion smoothing for the MP4. The screencast delivers a low, variable
+       * frame rate, so the raw capture can look choppy. Interpolation synthesises
+       * intermediate frames up to `smoothFps` from the real captured frames:
+       * - "blend" (default): cross-dissolves frames — natural motion-blur, never
+       *   warps text/geometry. Safe for any site.
+       * - "mci": motion-compensated — sharper moving cursor, but can warp fast-
+       *   scrolling dense text on some pages.
+       * - "off": no interpolation (raw capture rate).
+       */
+      interpolate: z.enum(["blend", "mci", "off"]).default("blend"),
+      /** Target fps for interpolation (only used when interpolate ≠ "off").
+       *  60 = display-refresh smoothness; interpolation fills every gap between
+       *  the real captured frames up to this rate. */
+      smoothFps: z.number().int().positive().max(120).default(60),
     })
     .default({}),
   /**

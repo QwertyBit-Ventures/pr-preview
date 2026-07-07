@@ -7,7 +7,14 @@ describe("config schema", () => {
       devCommand: "npm run dev",
       url: "http://localhost:{port}",
     });
-    expect(config.gif).toEqual({ width: 900, fps: 24, quality: "high", maxColors: 256 });
+    expect(config.gif).toEqual({
+      width: 900,
+      fps: 24,
+      quality: "high",
+      maxColors: 256,
+      interpolate: "blend",
+      smoothFps: 60,
+    });
     expect(config.resetStorage).toBe(true);
     expect(config.passes).toBe(2);
     expect(config.viewport).toEqual({ width: 1920, height: 1080 });

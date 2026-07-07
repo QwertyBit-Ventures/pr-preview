@@ -30,7 +30,7 @@ export interface ScreencastHandle {
  */
 export async function startScreencast(
   page: Page,
-  opts: { quality?: number; everyNthFrame?: number } = {},
+  opts: { quality?: number; everyNthFrame?: number; maxWidth?: number; maxHeight?: number } = {},
 ): Promise<ScreencastHandle> {
   const cdp: CDPSession = await page.context().newCDPSession(page);
   const frames: CapturedFrame[] = [];
@@ -56,10 +56,17 @@ export async function startScreencast(
   };
   cdp.on("Page.screencastFrame", onFrame);
 
+  // maxWidth/maxHeight cap the JPEG Chrome encodes per frame. Left unset, Chrome
+  // encodes the FULL window at device pixels (≈4× the pixels on a 2× display) —
+  // that per-frame encode+transfer cost is what starves the delivered frame rate.
+  // Capping to roughly the CSS window size defeats the Retina bloat, so Chrome
+  // delivers many more frames/sec; the clip is downscaled at encode anyway.
   await cdp.send("Page.startScreencast", {
     format: "jpeg",
     quality: opts.quality ?? 90,
     everyNthFrame: opts.everyNthFrame ?? 1,
+    ...(opts.maxWidth ? { maxWidth: opts.maxWidth } : {}),
+    ...(opts.maxHeight ? { maxHeight: opts.maxHeight } : {}),
   });
 
   return {

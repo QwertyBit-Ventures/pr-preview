@@ -276,8 +276,17 @@ export class Session {
     }
     const page = this.page;
     if (!page) return;
+    // Cap the capture to ~the CSS window size (bounded), so Chrome doesn't
+    // JPEG-encode full device-pixel frames on Retina — that raises the delivered
+    // frame rate. The clip is downscaled at encode, so this costs no real detail.
+    const { maxWidth, maxHeight } = await page
+      .evaluate(() => ({
+        maxWidth: Math.min(window.innerWidth, 1920),
+        maxHeight: Math.min(window.innerHeight, 1200),
+      }))
+      .catch(() => ({ maxWidth: 1920, maxHeight: 1200 }));
     try {
-      this.recordingFeed = await startScreencast(page, { quality: 80 });
+      this.recordingFeed = await startScreencast(page, { quality: 80, maxWidth, maxHeight });
     } catch {
       this.recordingFeed = null;
     }
@@ -367,6 +376,8 @@ export class Session {
       fps: this.config.gif.fps,
       quality: this.config.gif.quality,
       maxColors: this.config.gif.maxColors,
+      interpolate: this.config.gif.interpolate,
+      smoothFps: this.config.gif.smoothFps,
       format: this.config.format,
       outBase,
       label: label ? { pass: this.singleClip ? "single" : which, ...label } : undefined,

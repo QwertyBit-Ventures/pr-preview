@@ -87,6 +87,68 @@ export async function encodeMp4(
   });
 }
 
+/**
+ * Smooth MP4 from the raw, variable-rate captured frames. Each frame is held for
+ * its real duration (concat demuxer), then ffmpeg's `minterpolate` synthesises
+ * intermediate frames up to `outFps` — turning a low, choppy capture rate into
+ * fluid motion. `mode`:
+ *  - "blend": cross-dissolve (motion-blur); never warps text/geometry.
+ *  - "mci": motion-compensated; sharper moving cursor, slight warp risk on text.
+ */
+export async function encodeMp4Interpolated(
+  pngFrames: Buffer[],
+  durationsSec: number[],
+  outFps: number,
+  mode: "blend" | "mci",
+  outFile: string,
+): Promise<void> {
+  const dir = await mkdtemp(path.join(tmpdir(), "pr-preview-frames-"));
+  try {
+    await Promise.all(
+      pngFrames.map((buf, i) =>
+        writeFile(path.join(dir, `frame${String(i).padStart(5, "0")}.png`), buf),
+      ),
+    );
+    // concat demuxer with per-frame durations = real capture timing. The last
+    // file is repeated because the demuxer ignores the final `duration` line.
+    const lines: string[] = [];
+    pngFrames.forEach((_, i) => {
+      lines.push(`file 'frame${String(i).padStart(5, "0")}.png'`);
+      lines.push(`duration ${Math.max(0.001, durationsSec[i] ?? 1 / outFps).toFixed(4)}`);
+    });
+    lines.push(`file 'frame${String(pngFrames.length - 1).padStart(5, "0")}.png'`);
+    await writeFile(path.join(dir, "list.txt"), lines.join("\n") + "\n");
+
+    await mkdir(path.dirname(outFile), { recursive: true });
+    // scd=fdiff: skip interpolation across scene changes (big frame-to-frame
+    // differences) — duplicate instead of morphing between unrelated states.
+    // (The token is `fdiff`, not `fdi`; the latter is unparseable and makes the
+    // whole minterpolate command fail, silently downgrading to a choppy hold.)
+    const interp =
+      mode === "mci"
+        ? `minterpolate=fps=${outFps}:mi_mode=mci:me_mode=bidir:mc_mode=aobmc:vsbmc=1:scd=fdiff`
+        : `minterpolate=fps=${outFps}:mi_mode=blend:scd=fdiff`;
+    const common = ["-c:v", "libx264", "-preset", "slow", "-crf", "19", "-pix_fmt", "yuv420p", "-movflags", "+faststart", outFile]; // prettier-ignore
+    const input = ["-f", "concat", "-safe", "0", "-i", path.join(dir, "list.txt")];
+    const scale = "scale=trunc(iw/2)*2:trunc(ih/2)*2";
+    try {
+      await run("ffmpeg", ["-y", ...input, "-vf", `${interp},${scale}`, "-r", String(outFps), ...common]);
+    } catch (err) {
+      // minterpolate can be unavailable or choke on odd input — fall back to a
+      // plain constant-fps encode at real timing. Still a valid clip, just not
+      // interpolated, so a recording never fails for want of smoothing. Warn
+      // loudly: a silent fallback here once hid a bad filter arg and shipped
+      // choppy (un-interpolated) video as if it were smooth.
+      console.warn(
+        `[pr-preview] motion smoothing (${mode}) failed; encoding without interpolation — the clip will look choppier.\n  ${(err as Error).message?.split("\n")[0] ?? err}`,
+      );
+      await run("ffmpeg", ["-y", ...input, "-vf", scale, "-r", String(outFps), ...common]);
+    }
+  } finally {
+    await rm(dir, { recursive: true, force: true });
+  }
+}
+
 function run(cmd: string, args: string[]): Promise<void> {
   return new Promise((resolve, reject) => {
     const child = spawn(cmd, args, { stdio: ["ignore", "ignore", "pipe"] });

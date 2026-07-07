@@ -1,6 +1,7 @@
 import { readFileSync } from "node:fs";
 import { Command } from "commander";
 import { initCommand } from "./commands/init.js";
+import { mcpCommand } from "./commands/mcp.js";
 import { recordCommand } from "./commands/record.js";
 import { runCommand } from "./commands/run.js";
 import { log } from "./ui/logger.js";
@@ -69,6 +70,13 @@ Notes:
     beyond its base (it records the base in a throwaway worktree, your branch in place).`,
   )
   .action((opts) => wrap(() => runCommand(process.cwd(), opts)));
+
+program
+  .command("mcp")
+  .description(
+    "Run the Model Context Protocol server (stdio) so Claude Code can drive a recording from a prompt",
+  )
+  .action(() => wrap(() => mcpCommand(process.cwd())));
 
 async function wrap(fn: () => Promise<void>): Promise<void> {
   try {

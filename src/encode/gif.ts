@@ -24,6 +24,10 @@ export interface EncodeOptions {
   fps: number;
   quality: "high" | "max";
   maxColors: number;
+  /** MP4 motion smoothing (see config `gif.interpolate`). GIF ignores it. */
+  interpolate?: "blend" | "mci" | "off";
+  /** Target fps for interpolation. */
+  smoothFps?: number;
   outFile: string;
   /** Burned-in branch/timestamp caption (omit videoWidth — set per output). */
   label?: Omit<LabelSpec, "videoWidth">;
