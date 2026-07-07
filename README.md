@@ -16,11 +16,11 @@
 </p>
 
 <p align="center">
-  <img src="https://cdn.jsdelivr.net/npm/@qwertybit/pr-preview/assets/demo.gif" alt="PR Preview demo — a Claude Code prompt drives the app in Chrome and produces before/after videos" width="720" />
+  <img src="https://cdn.jsdelivr.net/npm/@qwertybit/pr-preview@0.1.5/assets/demo.gif" alt="PR Preview demo — a Claude Code prompt drives the app in Chrome and produces before/after videos" width="720" />
 </p>
 
 <p align="center">
-  <a href="https://cdn.jsdelivr.net/npm/@qwertybit/pr-preview/assets/demo.mp4">▶ Watch in higher quality (MP4)</a>
+  <a href="https://cdn.jsdelivr.net/npm/@qwertybit/pr-preview@0.1.5/assets/demo.mp4">▶ Watch in higher quality (MP4)</a>
 </p>
 
 **PR Preview** opens your app in a controlled Chrome window and records the journey you perform —
