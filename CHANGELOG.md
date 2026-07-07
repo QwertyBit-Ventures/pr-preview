@@ -6,6 +6,15 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [0.1.5] — 2026-07-07
+
+### Changed
+
+- **New demo animation** — refreshed the README/npm demo with a designed
+  walkthrough of the full flow: a Claude Code prompt kicks off the run, the app is
+  driven automatically in a real Chrome window (add to cart → checkout, recording a
+  before/after), and out come `before.mp4` + `after.mp4`. Also available as an MP4.
+
 ## [0.1.4] — 2026-07-07
 
 ### Fixed
@@ -99,6 +108,7 @@ Initial release.
   CSP `frame-ancestors`) are stripped.
 - CLI: `pr-preview init`, `pr-preview record`, `pr-preview run`.
 
-[Unreleased]: https://github.com/QwertyBit-Ventures/pr-preview/compare/v0.1.4...HEAD
+[Unreleased]: https://github.com/QwertyBit-Ventures/pr-preview/compare/v0.1.5...HEAD
+[0.1.5]: https://github.com/QwertyBit-Ventures/pr-preview/compare/v0.1.4...v0.1.5
 [0.1.4]: https://github.com/QwertyBit-Ventures/pr-preview/compare/v0.1.0...v0.1.4
 [0.1.0]: https://github.com/QwertyBit-Ventures/pr-preview/releases/tag/v0.1.0

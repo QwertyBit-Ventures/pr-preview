@@ -1,6 +1,6 @@
 {
   "name": "@qwertybit/pr-preview",
-  "version": "0.1.4",
+  "version": "0.1.5",
   "description": "Record a UI journey once, get polished before/after MP4 clips of every pull request — automatically.",
   "license": "MIT",
   "author": "QwertyBit <vlad@flowpoint.ai>",
