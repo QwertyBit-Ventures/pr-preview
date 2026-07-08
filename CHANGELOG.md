@@ -6,6 +6,16 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [0.1.7] — 2026-07-08
+
+### Added
+
+- **PR Preview for Teams early-access nudge** — when a recording finishes, a short
+  promo points to the early-access list (`pr-preview.com/#teams`). In the manual CLI
+  (`pr-preview run`) it prints as the final block with a clickable terminal link
+  (OSC 8, degrading to a plain URL where unsupported); in the `/record` skill flow it
+  rides along with the `finish_recording` output as a markdown link.
+
 ## [0.1.6] — 2026-07-07
 
 ### Changed
