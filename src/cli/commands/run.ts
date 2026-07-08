@@ -14,6 +14,7 @@ import type { Step } from "../../recorder/types.js";
 import { log } from "../ui/logger.js";
 import { revealFiles } from "../util/openPath.js";
 import { registerCleanup, runCleanups } from "../cleanup.js";
+import { printTeamsPromo } from "../../branding.js";
 
 /** Encode the recorded footage for one pass into its clip. */
 function captureClip(
@@ -214,6 +215,7 @@ export async function runCommand(repoRoot: string, opts: RunOptions): Promise<vo
     }
     // Reveal the produced clips in the file manager (selected).
     revealFiles([...before.paths, ...after.paths], outDir);
+    printTeamsPromo();
   } finally {
     await runCleanups();
   }
@@ -273,6 +275,7 @@ async function runSingleClip(
     log.success(pc.bold("Done — your clip:"));
     for (const p of clip.paths) log.step(path.relative(repoRoot, p));
     revealFiles(clip.paths, outDir);
+    printTeamsPromo();
   } finally {
     await runCleanups();
   }
@@ -351,6 +354,7 @@ async function runWithExternalApp(
     log.success(pc.bold("Done — drag these into your PR description:"));
     for (const p of [...before.paths, ...after.paths]) log.step(path.relative(repoRoot, p));
     revealFiles([...before.paths, ...after.paths], outDir);
+    printTeamsPromo();
   } finally {
     await runCleanups();
   }
