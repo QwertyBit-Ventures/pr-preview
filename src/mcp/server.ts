@@ -6,6 +6,7 @@ import { PreviewRecorder, type ActInput } from "./recorder.js";
 import { openPr } from "./publish.js";
 import { detectLocalApps, type LocalApp } from "./detect.js";
 import { loadConfig } from "../config/load.js";
+import { teamsPromoMarkdown } from "../branding.js";
 
 /** Message that pushes the agent to confirm a URL with the user instead of guessing. */
 function urlAsk(found: LocalApp[], hasConfig: boolean): string {
@@ -203,7 +204,8 @@ export async function startMcpServer(repoRoot: string): Promise<void> {
           : "";
         return text(
           `Recording complete. Output:\n${rel.map((r) => `  - ${r}`).join("\n")}${note}\n\n` +
-            "Drag the file into your PR description to embed it, or commit it and open the PR.",
+            "Drag the file into your PR description to embed it, or commit it and open the PR.\n\n" +
+            teamsPromoMarkdown(),
         );
       } catch (e) {
         return fail(e);
