@@ -1,4 +1,5 @@
 import { chromium, type Browser, type BrowserContext, type Page } from "playwright";
+import { seedCookies } from "./cookies.js";
 import { installHeaderStrip } from "./headerStrip.js";
 import { installRecorderBinding, type RawEventHandler } from "./recorderInject.js";
 
@@ -27,7 +28,7 @@ export interface BrowserSession {
 }
 
 /**
- * Local/Private Network Access features to disable so the harness (127.0.0.1)
+ * Local/Private Network Access features to disable so the harness (localhost)
  * can embed an app on localhost:PORT and that app can make its own localhost
  * requests (HMR sockets, RSC/data fetches). Without this Chrome blocks them and
  * the page renders but never hydrates → nothing is clickable.
@@ -124,6 +125,7 @@ export async function launchSession(opts: SessionOptions): Promise<BrowserSessio
   const context = await browser.newContext({
     viewport: null, // follow the real window — user can resize freely
   });
+  await seedCookies(context);
 
   // Grant permissions so a native prompt never blocks the run. Granted on the
   // context (all origins) and resiliently — names unsupported by this Chrome

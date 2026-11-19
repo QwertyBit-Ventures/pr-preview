@@ -8,6 +8,7 @@ import { startScreencast, type ScreencastHandle, type CapturedFrame } from "../c
 import { cssRectToFramePixels } from "../capture/region.js";
 import { encodeMedia, type MediaResult } from "../encode/media.js";
 import { getAppFrame, getAppFrameRect } from "../browser/frame.js";
+import { seedCookies } from "../browser/cookies.js";
 import type { Config } from "../config/schema.js";
 
 /**
@@ -150,11 +151,12 @@ export class Session {
     }
   }
 
-  /** Clear cookies + localStorage + sessionStorage and reload the app. */
+  /** Clear cookies + localStorage + sessionStorage and reload the app, back to the cookies file's cookies if any. */
   private async resetIframe(): Promise<void> {
     const page = this.page;
     if (!page) return;
     await page.context().clearCookies().catch(() => {});
+    await seedCookies(page.context());
     try {
       const frame = await getAppFrame(page, this.targetOrigin, 5_000);
       await frame.evaluate(() => {

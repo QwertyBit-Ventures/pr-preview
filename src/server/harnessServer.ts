@@ -86,7 +86,10 @@ export async function startHarnessServer(opts: HarnessServerOptions): Promise<Ha
   });
 
   return {
-    url: `http://127.0.0.1:${opts.port}`,
+    // localhost, not 127.0.0.1: an app under test on http://localhost:PORT is then same-site with the harness that
+    // frames it. Under a 127.0.0.1 parent the iframe is cross-site, and Chrome withholds the app's SameSite=Lax
+    // cookies from it, so a session cookie never sticks and the app can't stay signed in.
+    url: `http://localhost:${opts.port}`,
     bus,
     setAppUrl(url: string) {
       appUrl = url;

@@ -254,6 +254,20 @@ authenticated. One-click *hosted video in the PR body* is part of PR Preview for
 **Prefer to record by hand?** Manual mode is unchanged: `npx pr-preview run` opens Chrome for you to
 click through yourself. Both modes produce the same clips — the only difference is whose hands drive.
 
+### Recording a signed-in app
+
+To start every recording signed in, without signing in on camera, point `PR_PREVIEW_COOKIES_FILE` at a JSON
+array of cookies in Playwright's [`addCookies`](https://playwright.dev/docs/api/class-browsercontext#browser-context-add-cookies)
+shape. They are added when the browser launches, and again after a storage reset. This helps when sign-in can't be
+completed in the window (an emailed link or code) and you have a test session from somewhere else:
+
+```bash
+PR_PREVIEW_COOKIES_FILE=./session-cookies.json pr-preview run
+```
+
+Keep the file out of git. The harness is served on `localhost`, so an app on `http://localhost:PORT` is same-site with
+it and its `SameSite=Lax` cookies work inside the frame.
+
 ## Privacy
 
 PR Preview runs locally — it opens your app in a Chrome window, records, and writes video files to
