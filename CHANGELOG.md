@@ -6,6 +6,18 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Added
+
+- **`PR_PREVIEW_COOKIES_FILE`** — a JSON array of cookies (Playwright's `addCookies` shape) added to the
+  recording browser at launch and after a storage reset, so a recording can start signed in to an app whose
+  sign-in can't be completed in the window.
+
+### Fixed
+
+- **Signed-in apps on `localhost` stay signed in.** The harness is served on `http://localhost:PORT` instead of
+  `http://127.0.0.1:PORT`. Under a `127.0.0.1` parent, an app on `localhost` is a cross-site iframe and Chrome
+  withholds its `SameSite=Lax` cookies, so a session cookie never stuck.
+
 ## [0.1.7] — 2026-07-08
 
 ### Added
